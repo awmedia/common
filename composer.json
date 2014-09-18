@@ -5,9 +5,7 @@
     ],
     "version": "0.0.1",
     "require": {
-        "php": ">=5.3.2",
-        "php": ">=5.3.3",
-        "aw/dataport": ">=0.1.0"
+        "php": ">=5.3.2"
     },
     "autoload": {
         "psr-0": { "Aw\\Common\\": "lib/" }
