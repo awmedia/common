@@ -1,5 +1,6 @@
 {
     "name": "aw/common",
+    "description": "Common classes",
     "authors": [
         { "name": "Jerry Sietsma", "email": "email@sjerry.nl" }
     ],
@@ -9,5 +10,6 @@
     },
     "autoload": {
         "psr-0": { "Aw\\Common\\": "lib/" }
-    }
+    },
+    "minimum-stability": "dev"
 }
