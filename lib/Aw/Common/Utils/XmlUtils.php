@@ -32,7 +32,7 @@ class XmlUtils
      * Private/protected methods
      */
     
-    protected static function toArray(SimpleXMLElement $xml)
+    protected static function toArray(\SimpleXMLElement $xml)
     {
         return json_decode(json_encode($xml), true);
     }
