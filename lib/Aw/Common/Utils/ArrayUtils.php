@@ -118,7 +118,7 @@ class ArrayUtils
                 continue;
             }
             
-            $result = $isset ? $array[$key] : $default;
+            $found[] = $isset ? $array[$key] : $default;
         }
 
         return $found;
