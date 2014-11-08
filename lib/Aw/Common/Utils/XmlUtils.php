@@ -30,7 +30,7 @@ class XmlUtils
     
     public static function simpleXmlToArray(\SimpleXMLElement $element)
     {
-        return $this->toArray($element);
+        return self::toArray($element);
     }
     
     /**
