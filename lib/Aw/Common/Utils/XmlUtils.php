@@ -28,6 +28,11 @@ class XmlUtils
          return static::toArray(simplexml_load_string($string, null, LIBXML_NOCDATA));
     }
     
+    public static function simpleXmlToArray(\SimpleXMLElement $element)
+    {
+        return $this->toArray($element);
+    }
+    
     /**
      * Private/protected methods
      */
