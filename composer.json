@@ -5,7 +5,8 @@
         { "name": "Jerry Sietsma", "email": "email@sjerry.nl" }
     ],
     "require": {
-        "php": ">=5.3.2"
+        "php": ">=5.3.2",
+        "doctrine/cache": "^1.5@dev"
     },
     "autoload": {
         "psr-0": { "Aw\\Common\\": "lib/" }
