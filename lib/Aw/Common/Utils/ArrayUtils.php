@@ -103,10 +103,11 @@ class ArrayUtils
      * @param   array   array to extract keys from
      * @param   array   list of key names
      * @param   mixed   default value
-     * @param    boolean    true to ignore keys that are not set instead of using default
+     * @param	boolean	Preserve keys (default = false)
+     * @param   boolean    true to ignore keys that are not set instead of using default
      * @return  array
      */
-    public static function extract(array $array, array $keys, $default = null, $ignoreEmpty = false)
+    public static function extract(array $array, array $keys, $default = null, $preserveKeys = false, $ignoreEmpty = false)
     {
         $found = array();
         foreach ($keys as $key)
@@ -118,7 +119,15 @@ class ArrayUtils
                 continue;
             }
             
-            $found[] = $isset ? $array[$key] : $default;
+            $value = $isset ? $array[$key] : $default;
+            if ($preserveKeys)
+            {
+	            $found[$key] = $value;
+            }
+            else
+            {
+	        	$found[] = $value;   
+            } 
         }
 
         return $found;

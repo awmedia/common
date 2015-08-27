@@ -18,7 +18,7 @@ class CsvIterator implements Iterator
      *
      * @var int
      */
-    const ROW_LENGTH = 2048;
+    const ROW_LENGTH = 4048;
 
     /**
      * Resource file pointer
@@ -66,17 +66,16 @@ class CsvIterator implements Iterator
      */
     public function __construct($file, $delimiter = ',', $enclosure = '"', $escape = '\\')
     {
-        $this->_initializedWithHandle = get_resource_type($file) !== false;
+        $this->_initializedWithHandle = !is_string($file) && get_resource_type($file) !== false;
         $this->_filePointer =  $this->_initializedWithHandle ? $file : fopen($file, 'rt');
         $this->_delimiter = $delimiter;
         $this->_enclosure = $enclosure;
         $this->_escape = $escape;
-        
+
         $this->_hasHeaderWithColumns = true;
         $this->_ignoreHeaderWithColumns = true;
         $this->_useHeaderColumnsAsIndex = true;
         $this->_ignoreEmptyRows = true;
-        
         $this->_columns = null;
         
         // init: set columns if available
@@ -90,7 +89,8 @@ class CsvIterator implements Iterator
     {
         $this->_rowCounter = 0;
         rewind($this->_filePointer);
-        
+        $this->next();
+
         if ($this->_hasHeaderWithColumns === true)
         {
             $this->_columns = $this->current();
@@ -108,36 +108,6 @@ class CsvIterator implements Iterator
      */
     public function current()
     {
-        $data = fgetcsv($this->_filePointer, self::ROW_LENGTH, $this->_delimiter, $this->_enclosure, $this->_escape);
-        
-        if ($this->_ignoreEmptyRows)
-        {
-            $dataTmp = $data;
-            $dataTmp = array_filter($dataTmp);
-            
-            if (empty($dataTmp))
-            {
-                return $this->current();
-            }
-        }
-        
-        $this->_currentElement = $data;
-        
-        if ($this->_useHeaderColumnsAsIndex && ($this->_hasHeaderWithColumns && $this->_rowCounter > 0))
-        {
-              $this->_currentElement = @array_combine($this->_columns, $data);
-              
-              if ($this->_currentElement === false)
-              {
-                  if (count($data) !== $this->_columnCount)
-                  {
-                      throw new Exception('The number of headers don\'t match the number of columns');
-                  }
-              }
-        }
-        
-        $this->_rowCounter ++;
-
         return $this->_currentElement;
     }
 
@@ -154,7 +124,67 @@ class CsvIterator implements Iterator
      */
     public function next()
     {
-        return ! feof($this->_filePointer);
+        $hasNext = !feof($this->_filePointer);
+        $this->_currentElement = null;
+        
+        if ($hasNext)
+        {
+            $data = fgetcsv($this->_filePointer, self::ROW_LENGTH, $this->_delimiter, $this->_enclosure, $this->_escape);
+    
+            if ($data !== false)
+            {
+                if ($this->_ignoreEmptyRows)
+                {
+                    $dataTmp = $data;  
+                        
+                    $dataTmp = array_filter($dataTmp);
+                    
+                    if (empty($dataTmp))
+                    {
+                        if ($this->next())
+                        {
+                            return $this->next();
+                        }
+                    }
+                }
+                
+                if ($data)
+                {
+                    $this->_currentElement = $data;
+                    
+                    if ($this->_useHeaderColumnsAsIndex && ($this->_hasHeaderWithColumns && $this->_rowCounter > 0))
+                    {
+                          $this->_currentElement = @array_combine($this->_columns, $data);
+                          
+                          if ($this->_currentElement === false)
+                          {
+                              if (count($data) !== $this->_columnCount)
+                              {
+                                  /*
+                                  echo '<pre>';
+                                  echo '<h1>Headers:</h1>';
+                                  print_r($this->_columns);
+                                  echo '<h1>Data:</h1>';
+                                  print_r($data);
+                                  echo '</pre>';
+                                  */
+                                  //exit;
+                                  
+                                  throw new Exception('The number of headers don\'t match the number of columns');
+                              }
+                          }
+                    }
+                    
+                    $this->_rowCounter ++;
+                }
+            }
+            else
+            {
+                $this->_currentElement = null;
+            }
+        }
+        
+        return $this->_currentElement;
     }
 
     /*
@@ -162,6 +192,18 @@ class CsvIterator implements Iterator
      */
     public function valid()
     {
+        if ($this->_currentElement === null && feof($this->_filePointer))
+        {
+            if (!$this->_initializedWithHandle)
+            {
+                fclose($this->_filePointer);
+            }
+            
+            return false;
+        }
+        return true;
+        
+        /*
         if (!$this->next())
         {
             if (!$this->_initializedWithHandle)
@@ -173,6 +215,7 @@ class CsvIterator implements Iterator
         }
         
         return true;
+        */
     }
     
     /**
