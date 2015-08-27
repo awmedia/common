@@ -6,7 +6,6 @@ use Doctrine\Common\Cache\CacheProvider;
 
 /**
  * MySql DB cache provider.
- *
  * @author Jerry Sietsma <jerry@adworksmedia.nl>
  */
 class MySqlDbCache extends CacheProvider
@@ -27,11 +26,14 @@ class MySqlDbCache extends CacheProvider
      */
     private $table;
     
-    private $cm;
+    /**
+     * @var PDO
+     */
+    private $pdo;
 
-    public function __construct($cm, $table)
+    public function __construct($pdo, $table)
     {
-        $this->cm = $cm;
+        $this->pdo = $pdo;
         $this->table = $table;
     }
 
@@ -40,8 +42,7 @@ class MySqlDbCache extends CacheProvider
      */
     protected function doFetch($id)
     {
-        //$document = $this->collection->findOne(array('_id' => $id), array(self::DATA_FIELD, self::EXPIRATION_FIELD));
-        $stmt = $this->cm->prepare("SELECT `" . self::DATA_FIELD . "`, `" . self::EXPIRATION_FIELD . "` FROM `" . $this->table . "` WHERE `id` = :id");
+        $stmt = $this->pdo->prepare("SELECT `" . self::DATA_FIELD . "`, `" . self::EXPIRATION_FIELD . "` FROM `" . $this->table . "` WHERE `id` = :id");
         $stmt->bindValue('id', $id);
         $stmt->execute();
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -66,7 +67,7 @@ class MySqlDbCache extends CacheProvider
     {
         $returnValues = array();
         
-        $stmt = $this->cm->prepare("SELECT `id`, `" . self::DATA_FIELD . "`, `" . self::EXPIRATION_FIELD . "` FROM `" . $this->table . "` WHERE `id` IN ('" . implode("', '", $keys) . "')");
+        $stmt = $this->pdo->prepare("SELECT `id`, `" . self::DATA_FIELD . "`, `" . self::EXPIRATION_FIELD . "` FROM `" . $this->table . "` WHERE `id` IN ('" . implode("', '", $keys) . "')");
         $stmt->execute();
         $items = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         
@@ -97,7 +98,7 @@ class MySqlDbCache extends CacheProvider
      */
     protected function doContains($id)
     {
-        $stmt = $this->cm->prepare("SELECT `" . self::EXPIRATION_FIELD . "` FROM `" . $this->table . "` WHERE `id` = :id");
+        $stmt = $this->pdo->prepare("SELECT `" . self::EXPIRATION_FIELD . "` FROM `" . $this->table . "` WHERE `id` = :id");
         $stmt->bindValue('id', $id);
         $stmt->execute();
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
@@ -119,7 +120,7 @@ class MySqlDbCache extends CacheProvider
      */
     protected function doSave($id, $data, $lifeTime = 0)
     {
-        $stmt = $this->cm->prepare("
+        $stmt = $this->pdo->prepare("
             INSERT INTO `" . $this->table . "` (`id`, `" . self::EXPIRATION_FIELD . "`, `" . self::DATA_FIELD . "`) VALUES (:id, :expiration, :data)
             ON DUPLICATE KEY UPDATE `" . self::EXPIRATION_FIELD . "` = :expiration, `" . self::DATA_FIELD . "` = :data
         ");
@@ -136,7 +137,7 @@ class MySqlDbCache extends CacheProvider
      */
     protected function doDelete($id)
     {
-        $stmt = $this->cm->prepare("DELETE FROM `" . $this->table . "` WHERE `id` = :id");
+        $stmt = $this->pdo->prepare("DELETE FROM `" . $this->table . "` WHERE `id` = :id");
         $stmt->bindValue('id', $id);
         $result = $stmt->execute();
 
@@ -148,7 +149,7 @@ class MySqlDbCache extends CacheProvider
      */
     protected function doFlush()
     {
-        $stmt = $this->cm->prepare("TRUNCATE TABLE `" . $this->table . "`");
+        $stmt = $this->pdo->prepare("TRUNCATE TABLE `" . $this->table . "`");
         $result = $stmt->execute();
         return $result;
     }
@@ -165,25 +166,6 @@ class MySqlDbCache extends CacheProvider
             Cache::STATS_MEMORY_USAGE => null,
             Cache::STATS_MEMORY_AVAILABLE  => null
         );
-        /*
-        $serverStatus = $this->collection->db->command(array(
-            'serverStatus' => 1,
-            'locks' => 0,
-            'metrics' => 0,
-            'recordStats' => 0,
-            'repl' => 0,
-        ));
-
-        $collStats = $this->collection->db->command(array('collStats' => 1));
-
-        return array(
-            Cache::STATS_HITS => null,
-            Cache::STATS_MISSES => null,
-            Cache::STATS_UPTIME => (isset($serverStatus['uptime']) ? (integer) $serverStatus['uptime'] : null),
-            Cache::STATS_MEMORY_USAGE => (isset($collStats['size']) ? (integer) $collStats['size'] : null),
-            Cache::STATS_MEMORY_AVAILABLE  => null,
-        );
-        */
     }
 
     /**
