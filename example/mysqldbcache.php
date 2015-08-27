@@ -6,8 +6,7 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use Aw\Common\Cache\MySqlDbCache,
-    Aw\Common\Utils\ArrayUtils as Arr;
+use Aw\Common\Cache\MySqlDbCache;
 
 $dbConfig = array(
     ':hostname' => 'localhost',
